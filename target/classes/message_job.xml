@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:batch="http://www.springframework.org/schema/batch"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/batch
+	http://www.springframework.org/schema/batch/spring-batch-3.0.xsd
+	http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+	http://www.springframework.org/schema/util
+	http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+
+    <!-- bean definitions go here -->
+    <batch:job id="messageJob">
+        <batch:step id="messageStep">
+            <tasklet throttle-limit="1">
+                <chunk reader="messageReader"
+                       processor="messageProcessor"
+                       writer="txtWriter" commit-interval="1">
+                </chunk>
+            </tasklet>
+        </batch:step>
+    </batch:job>
+    <bean id="jobRepository"
+                class="org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean">
+        <property name="transactionManager" ref="transactionManager" />
+    </bean>
+
+    <bean id="transactionManager"
+                class="org.springframework.batch.support.transaction.ResourcelessTransactionManager"/>
+    <bean id="messageReader"
+                class="org.springframework.batch.item.file.FlatFileItemReader">
+        <property name="lineMapper" ref="lineMapper">
+        </property>
+        <property name="resource"
+                        value="classpath:txt/test1.txt"></property>
+
+    </bean>
+    <bean id="lineMapper"
+                class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+        <property name="lineTokenizer">
+            <bean
+                    class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+                <property name="delimiter">
+                    <util:constant static-field="org.springframework.batch.item.file.transform.DelimitedLineTokenizer.DEFAULT_QUOTE_CHARACTER"></util:constant>
+                </property>
+            </bean>
+        </property>
+        <property name="fieldSetMapper">
+            <bean class="batch.UserMapper">
+            </bean>
+        </property>
+    </bean>
+    <bean id="messageProcessor" class="batch.MessagesItemProcessor"></bean>
+    <bean id="messageWriter" class="batch.MessagesItemWriter"></bean>
+
+    <bean id="txtWriter" class="org.springframework.batch.item.file.FlatFileItemWriter">
+        <property name="lineAggregator" ref="writerAggregator"></property>
+        <property name="resource" ref="outputResource1"></property>
+        <!--<property name="saveState" value="true"></property>-->
+        <!--<property name="appendAllowed" value="true"></property>-->
+        <!--<property name="forceSync" value="true"></property>-->
+        <!--<property name="lineSeparator" value="|"></property>-->
+        <!--<property name="transactional" value="true"></property>-->
+        <!--<property name="shouldDeleteIfExists" value="true"></property>-->
+        <!--<property name="shouldDeleteIfEmpty" value="true"></property>-->
+
+    </bean>
+
+    <bean id="writerAggregator" class="org.springframework.batch.item.file.transform.DelimitedLineAggregator">
+        <!--<property name="delimiter" value="|"></property>-->
+        <property name="fieldExtractor">
+            <bean class="org.springframework.batch.item.file.transform.PassThroughFieldExtractor"></bean>
+        </property>
+
+    </bean>
+
+
+
+    <bean id="outputResource1" class="org.springframework.core.io.FileSystemResource">
+        <constructor-arg value="output.txt"></constructor-arg>
+        <!--<constructor-arg value="classpath:txt/output.txt"></constructor-arg>-->
+    </bean>
+
+
+
+</beans>
+
+
+

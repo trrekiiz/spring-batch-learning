@@ -1,0 +1,7 @@
+DaoTest.class
+batch/MessagesItemProcessor.class
+MainApp.class
+batch/User.class
+batch/Message.class
+batch/UserMapper.class
+batch/MessagesItemWriter.class
